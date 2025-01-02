@@ -23,8 +23,12 @@
         "title": "Rustc run test file with ts"
       },
       {
-        "command": "common.closeAndLock",
+        "command": "common.lock_current_file",
         "title": "Lock current file"
+      },
+      {
+        "command": "common.unlock_current_file",
+        "title": "Unlock current file"
       }
     ]
   },
