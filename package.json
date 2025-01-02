@@ -3,6 +3,7 @@
   "displayName": "yukang-vscode-tools",
   "description": "Vscode tools customized by Yukang",
   "version": "0.0.1",
+  "repository": "https://github.com/chenyukang/yukang-vscode-tools.git",
   "engines": {
     "vscode": "^1.96.0"
   },
