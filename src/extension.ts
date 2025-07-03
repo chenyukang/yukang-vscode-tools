@@ -14,7 +14,7 @@ let lockedGroups = new Set<number>();
 export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "rustc-dev" is now active!');
+  console.log('Extension "rustc-dev" is now active!');
 
   // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(
@@ -166,6 +166,57 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
   context.subscriptions.push(goto_file_begin);
+
+  let run_rust_unit_test_at_cursor = vscode.commands.registerCommand(
+    "common.run_rust_unit_test_at_cursor",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) return;
+      const doc = editor.document;
+      let lineNum = editor.selection.active.line;
+      let foundAttr = false;
+      let funcName = "";
+      let prevLine = "";
+      // Search upwards for #[
+      while (lineNum >= 0) {
+        const lineText = doc.lineAt(lineNum).text.trim();
+        if (!foundAttr && lineText.startsWith("#[")) {
+          foundAttr = true;
+        }
+        if (
+          foundAttr &&
+          (prevLine.startsWith("fn ") || prevLine.startsWith("async fn "))
+        ) {
+          // Extract function name
+          let match = prevLine.match(/fn\s+([a-zA-Z0-9_]+)/);
+          if (match && match[1]) {
+            funcName = match[1];
+            break;
+          }
+        }
+        prevLine = lineText;
+        lineNum--;
+      }
+
+      if (funcName) {
+        const termCmd = `ct.sh ${funcName}`;
+        let terminal;
+        if (vscode.window.terminals.length > 0) {
+          terminal =
+            vscode.window.terminals[vscode.window.terminals.length - 1];
+        } else {
+          terminal = vscode.window.createTerminal();
+        }
+        terminal.show();
+        terminal.sendText(termCmd);
+      } else {
+        vscode.window.showWarningMessage(
+          "No Rust test function found above cursor."
+        );
+      }
+    }
+  );
+  context.subscriptions.push(run_rust_unit_test_at_cursor);
 }
 
 // This method is called when your extension is deactivated

@@ -23,6 +23,10 @@
         "title": "Rustc run test file with ts"
       },
       {
+        "command": "common.run_rust_unit_test_at_cursor",
+        "title": "Run Rust Unit Test at Cursor"
+      },
+      {
         "command": "common.lock_current_file",
         "title": "Lock current file"
       },
