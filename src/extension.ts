@@ -6,6 +6,8 @@ import * as fs from "fs";
 
 let lockedDecorationType: vscode.TextEditorDecorationType;
 let statusBarItem: vscode.StatusBarItem;
+// Add tracking for locked groups
+let lockedGroups = new Set<number>();
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -96,6 +98,11 @@ export function activate(context: vscode.ExtensionContext) {
           "workbench.action.lockEditorGroup"
         );
 
+        // Store current group ID
+        const currentGroup = vscode.window.tabGroups.activeTabGroup;
+        const groupIndex = vscode.window.tabGroups.all.indexOf(currentGroup);
+        lockedGroups.add(groupIndex);
+
         // Update status bar
         const filePath = editor.document.uri.fsPath;
         const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
@@ -111,15 +118,54 @@ export function activate(context: vscode.ExtensionContext) {
 
   let unlock_handler = vscode.commands.registerCommand(
     "common.unlock_current_file",
-    () => {
-      let editor = vscode.window.activeTextEditor;
-      if (editor) {
-        vscode.commands.executeCommand("workbench.action.unlockEditorGroup");
-        statusBarItem.hide();
-      }
+    async () => {
+      // const currentGroup = vscode.window.tabGroups.activeTabGroup;
+      // const groupIndex = vscode.window.tabGroups.all.indexOf(currentGroup);
+
+      // Only unlock previously locked groups
+
+      await vscode.commands.executeCommand(
+        "workbench.action.focusFirstEditorGroup"
+      );
+      await vscode.commands.executeCommand(
+        "workbench.action.unlockEditorGroup"
+      );
+
+      // Clear tracking and hide status bar
+      lockedGroups.clear();
+      // Hide status bar and clear tracked files
+      statusBarItem.hide();
     }
   );
   context.subscriptions.push(unlock_handler);
+
+  let goto_file_end = vscode.commands.registerCommand(
+    "common.goto_end_of_file",
+    () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        const lastLine = editor.document.lineCount - 1;
+        const lastChar = editor.document.lineAt(lastLine).text.length;
+        const pos = new vscode.Position(lastLine, lastChar);
+        editor.selection = new vscode.Selection(pos, pos);
+        editor.revealRange(new vscode.Range(pos, pos));
+      }
+    }
+  );
+  context.subscriptions.push(goto_file_end);
+
+  let goto_file_begin = vscode.commands.registerCommand(
+    "common.goto_beginning_of_file",
+    () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        const pos = new vscode.Position(0, 0);
+        editor.selection = new vscode.Selection(pos, pos);
+        editor.revealRange(new vscode.Range(pos, pos));
+      }
+    }
+  );
+  context.subscriptions.push(goto_file_begin);
 }
 
 // This method is called when your extension is deactivated

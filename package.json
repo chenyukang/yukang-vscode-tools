@@ -29,6 +29,14 @@
       {
         "command": "common.unlock_current_file",
         "title": "Unlock current file"
+      },
+      {
+        "command": "common.goto_end_of_file",
+        "title": "Go to End of File"
+      },
+      {
+        "command": "common.goto_beginning_of_file",
+        "title": "Go to Beginning of File"
       }
     ]
   },
