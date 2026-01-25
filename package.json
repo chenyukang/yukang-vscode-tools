@@ -41,6 +41,18 @@
       {
         "command": "common.goto_beginning_of_file",
         "title": "Go to Beginning of File"
+      },
+      {
+        "command": "common.open_real_source_file",
+        "title": "Open Real Source File"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "common.open_real_source_file",
+        "key": "ctrl+alt+o",
+        "mac": "cmd+alt+o",
+        "when": "editorTextFocus"
       }
     ]
   },

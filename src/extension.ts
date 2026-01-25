@@ -217,6 +217,63 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
   context.subscriptions.push(run_rust_unit_test_at_cursor);
+
+  let open_real_source_file = vscode.commands.registerCommand(
+    "common.open_real_source_file",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showWarningMessage("No active editor.");
+        return;
+      }
+
+      const cursorPosition = editor.selection.active;
+      let targetUri: vscode.Uri | undefined;
+
+      const resolveFileUri = (uri: vscode.Uri | undefined): vscode.Uri | undefined => {
+        if (!uri) return undefined;
+        if (uri.scheme === "file") return uri;
+        if (uri.path && path.isAbsolute(uri.path) && fs.existsSync(uri.path)) {
+          return vscode.Uri.file(uri.path);
+        }
+        return undefined;
+      };
+
+      const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+      const tabInput = activeTab?.input;
+      if (tabInput instanceof vscode.TabInputTextDiff) {
+        const candidates = [tabInput.original, tabInput.modified];
+        targetUri = candidates.map(resolveFileUri).find(Boolean);
+        if (!targetUri) {
+          targetUri = resolveFileUri(tabInput.original) ?? tabInput.original;
+        }
+      } else {
+        targetUri = resolveFileUri(editor.document.uri) ?? editor.document.uri;
+      }
+
+      if (!targetUri || targetUri.scheme !== "file") {
+        vscode.window.showWarningMessage(
+          "Unable to locate the real source file from the current editor."
+        );
+        return;
+      }
+
+      const targetDoc = await vscode.workspace.openTextDocument(targetUri);
+      const targetEditor = await vscode.window.showTextDocument(targetDoc, {
+        preview: false,
+      });
+      const targetPos = new vscode.Position(
+        Math.min(cursorPosition.line, targetDoc.lineCount - 1),
+        cursorPosition.character
+      );
+      targetEditor.selection = new vscode.Selection(targetPos, targetPos);
+      targetEditor.revealRange(
+        new vscode.Range(targetPos, targetPos),
+        vscode.TextEditorRevealType.InCenterIfOutsideViewport
+      );
+    }
+  );
+  context.subscriptions.push(open_real_source_file);
 }
 
 // This method is called when your extension is deactivated
